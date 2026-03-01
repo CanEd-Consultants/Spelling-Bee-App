@@ -186,3 +186,27 @@ ELEVENLABS_API_KEY=              # Optional TTS fallback
 - Do not store sensitive data in localStorage
 - Do not build the organizer/competition-management features in MVP
 - Do not build Junior or Intermediate word lists until Primary is complete
+
+-----
+
+## Implementation Status
+
+> Last updated: March 2026
+
+| Phase | Feature | Status |
+|-------|---------|--------|
+| 1 | Foundation & Infrastructure | Done |
+| 2 | Authentication & Profiles | Done |
+| 3 | Practice Session (Core) | Done |
+| 4 | Word List Browser | Done |
+| 5 | Progress Dashboard & Review | Done |
+| 6 | Spelling Guidelines | Done |
+| 7 | Polish & Error Handling | Done |
+| 8 | Deployment & Launch | Pending (requires Supabase + Vercel setup) |
+
+### Before deploying:
+1. Set up a Supabase project and add credentials to `.env.local`
+2. Run `data/schema.sql` in the Supabase SQL Editor to create tables and RLS policies
+3. Complete the word list in `data/words/primary-2026.json` (50 sample words included, needs all 400)
+4. Connect the GitHub repo to Vercel and add environment variables
+5. Verify fonts load correctly on deployed URL (Google Fonts loaded via CDN link)
