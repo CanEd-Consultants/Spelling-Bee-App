@@ -1,0 +1,211 @@
+[
+  {
+    "id": 1,
+    "title": "Final Consonant Doubled",
+    "summary": "A word ending in a single consonant preceded by a single vowel doubles the consonant before a vowel suffix.",
+    "rules": [
+      {
+        "subrule": "a",
+        "description": "One syllable words or words accented on the final syllable double the final consonant before a vowel suffix.",
+        "examples": ["plan \u2192 planning", "refer \u2192 referring", "commit \u2192 committing"],
+        "exceptions": ["devil \u2192 devilish", "benefit \u2192 benefited"]
+      },
+      {
+        "subrule": "b",
+        "description": "Words ending in L usually double before a suffix in Canadian/British English.",
+        "examples": ["cancel \u2192 cancellation", "travel \u2192 travelling"]
+      }
+    ],
+    "word_list_examples": [20, 41]
+  },
+  {
+    "id": 2,
+    "title": "Silent E Dropped",
+    "summary": "Words ending in silent E usually drop the E before a vowel suffix.",
+    "rules": [
+      {
+        "subrule": "a",
+        "description": "Drop silent E before suffixes beginning with a vowel (-ing, -ed, -able, -ous).",
+        "examples": ["love \u2192 loving", "hope \u2192 hoping", "write \u2192 writing"]
+      },
+      {
+        "subrule": "b",
+        "description": "Keep the E before suffixes beginning with a consonant (-ment, -ness, -ful, -ly).",
+        "examples": ["hope \u2192 hopeful", "care \u2192 careless", "achieve \u2192 achievement"],
+        "exceptions": ["argue \u2192 argument", "judge \u2192 judgment"]
+      },
+      {
+        "subrule": "c",
+        "description": "Keep the E after soft C or G before suffixes beginning with A or O.",
+        "examples": ["courage \u2192 courageous", "notice \u2192 noticeable"]
+      }
+    ],
+    "word_list_examples": [24, 34]
+  },
+  {
+    "id": 3,
+    "title": "IE and EI",
+    "summary": "Use I before E except after C, or when sounding like A as in 'neighbour' and 'weigh'.",
+    "rules": [
+      {
+        "subrule": "a",
+        "description": "I before E: believe, achieve, field, piece.",
+        "examples": ["believe", "achieve", "field", "piece"]
+      },
+      {
+        "subrule": "b",
+        "description": "E before I after C: receive, ceiling, deceive.",
+        "examples": ["receive", "ceiling", "deceive", "conceive"]
+      },
+      {
+        "subrule": "c",
+        "description": "E before I when sounding like A: neighbour, weigh, vein.",
+        "examples": ["neighbour", "weigh", "vein", "freight"],
+        "exceptions": ["foreign", "weird", "either", "neither", "ancient"]
+      }
+    ],
+    "word_list_examples": [6, 14, 21, 28, 49]
+  },
+  {
+    "id": 4,
+    "title": "Y Changed to I",
+    "summary": "When a word ends in consonant + Y, change Y to I before adding a suffix (except -ing).",
+    "rules": [
+      {
+        "subrule": "a",
+        "description": "Change Y to I before most suffixes: -es, -ed, -er, -est, -ful, -ness, -ly.",
+        "examples": ["happy \u2192 happiness", "beauty \u2192 beautiful", "carry \u2192 carried"]
+      },
+      {
+        "subrule": "b",
+        "description": "Keep the Y before -ing.",
+        "examples": ["carry \u2192 carrying", "study \u2192 studying"]
+      },
+      {
+        "subrule": "c",
+        "description": "If a vowel comes before the Y, keep the Y.",
+        "examples": ["play \u2192 played", "enjoy \u2192 enjoyable"],
+        "exceptions": ["day \u2192 daily", "say \u2192 said"]
+      }
+    ],
+    "word_list_examples": [19]
+  },
+  {
+    "id": 5,
+    "title": "Adding Prefixes",
+    "summary": "When a prefix is added to a word, the spelling of the root word does not change.",
+    "rules": [
+      {
+        "subrule": "a",
+        "description": "The spelling of the root word stays the same when a prefix is added.",
+        "examples": ["dis + appear = disappear", "mis + spell = misspell", "un + necessary = unnecessary"]
+      }
+    ],
+    "word_list_examples": [40]
+  },
+  {
+    "id": 6,
+    "title": "Adding Suffixes -TION and -SION",
+    "summary": "Words ending in -TION and -SION follow specific patterns.",
+    "rules": [
+      {
+        "subrule": "a",
+        "description": "Use -TION after most consonants and long vowels.",
+        "examples": ["nation", "mention", "question", "education"]
+      },
+      {
+        "subrule": "b",
+        "description": "Use -SION after L, N, R and after the letters S or D in the root word.",
+        "examples": ["decision", "explosion", "television", "confusion"]
+      }
+    ],
+    "word_list_examples": [38]
+  },
+  {
+    "id": 7,
+    "title": "Plurals",
+    "summary": "Rules for forming plural nouns.",
+    "rules": [
+      {
+        "subrule": "a",
+        "description": "Most nouns: add -S.",
+        "examples": ["cat \u2192 cats", "book \u2192 books"]
+      },
+      {
+        "subrule": "b",
+        "description": "Nouns ending in S, X, Z, CH, SH: add -ES.",
+        "examples": ["box \u2192 boxes", "church \u2192 churches", "brush \u2192 brushes"]
+      },
+      {
+        "subrule": "c",
+        "description": "Nouns ending in consonant + Y: change Y to I, add -ES.",
+        "examples": ["baby \u2192 babies", "city \u2192 cities"]
+      },
+      {
+        "subrule": "d",
+        "description": "Some nouns ending in F or FE: change to -VES.",
+        "examples": ["knife \u2192 knives", "leaf \u2192 leaves", "life \u2192 lives"]
+      }
+    ],
+    "word_list_examples": []
+  },
+  {
+    "id": 8,
+    "title": "Silent Letters",
+    "summary": "Some words contain letters that are not pronounced.",
+    "rules": [
+      {
+        "subrule": "a",
+        "description": "Common silent letters: K in KN (know, knee), W in WR (write, wrong), B in MB (comb, climb).",
+        "examples": ["know", "write", "comb", "climb"]
+      },
+      {
+        "subrule": "b",
+        "description": "Silent GH in words like caught, daughter, thought.",
+        "examples": ["caught", "daughter", "thought"]
+      }
+    ],
+    "word_list_examples": [10, 15, 27, 32, 36]
+  },
+  {
+    "id": 9,
+    "title": "Homophones",
+    "summary": "Words that sound the same but have different spellings and meanings.",
+    "rules": [
+      {
+        "subrule": "a",
+        "description": "In a spelling bee, the pronouncer will always provide the definition and an example sentence for homophones.",
+        "examples": ["aisle / isle / I'll", "allowed / aloud", "ceiling / sealing"]
+      },
+      {
+        "subrule": "b",
+        "description": "Always listen carefully to the definition to determine the correct spelling.",
+        "examples": ["accept / except", "borough / burro / burrow"]
+      }
+    ],
+    "word_list_examples": [4, 10, 11, 17, 23, 28, 33]
+  },
+  {
+    "id": 10,
+    "title": "Canadian Spelling",
+    "summary": "Canadian English follows British spelling conventions for certain patterns.",
+    "rules": [
+      {
+        "subrule": "a",
+        "description": "Use -OUR instead of -OR: colour, honour, neighbour, favourite.",
+        "examples": ["colour", "honour", "neighbour", "favourite"]
+      },
+      {
+        "subrule": "b",
+        "description": "Use -RE instead of -ER: centre, theatre, metre, litre.",
+        "examples": ["centre", "theatre", "metre", "litre"]
+      },
+      {
+        "subrule": "c",
+        "description": "Double L before suffixes: travelling, cancellation, labelling.",
+        "examples": ["travelling", "cancellation", "labelling"]
+      }
+    ],
+    "word_list_examples": []
+  }
+]
