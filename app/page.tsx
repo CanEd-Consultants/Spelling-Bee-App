@@ -1,6 +1,20 @@
 import Link from "next/link"
+import { createClient } from "@/lib/supabase/server"
+import { redirect } from "next/navigation"
 
-export default function HomePage() {
+export default async function HomePage() {
+  const supabase = createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  // If authenticated, redirect to dashboard
+  if (user) {
+    redirect("/dashboard")
+  }
+
+  // Public landing page for unauthenticated users
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-8">
       <div className="max-w-2xl text-center space-y-8">
