@@ -1,0 +1,22 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --sboc-yellow: #F5C400;
+  --sboc-dark: #1A1A1A;
+  --sboc-white: #FAFAF5;
+  --sboc-green: #22C55E;
+  --sboc-red: #EF4444;
+  --sboc-neutral: #6B7280;
+}
+
+body {
+  font-family: "DM Sans", sans-serif;
+  color: var(--sboc-dark);
+  background-color: var(--sboc-white);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: "Fredoka", sans-serif;
+}
