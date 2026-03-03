@@ -1,212 +1,137 @@
-# CLAUDE.md — Spelling Bee of Canada Practice App
+# CLAUDE.md
 
-> Claude Code reads this file at the start of every session. Follow all rules here precisely.
-
------
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview
 
-A web-based practice and study platform for Spelling Bee of Canada (SBOC) contestants aged 6–14 and their parents. The app helps children study the official word list, practice spelling interactively, and track their progress — all aligned with official SBOC competition rules.
+A web-based practice and study platform for Spelling Bee of Canada (SBOC) contestants aged 6–14 and their parents. Children study the official word list, practice spelling interactively via text-to-speech, and track progress — aligned with official SBOC competition rules.
 
------
+See `/docs/PRD.md`, `/docs/TECHNICAL_DESIGN.md`, and `/docs/IMPLEMENTATION_PLAN.md` for detailed specs.
 
-## Project Docs
+## Development Commands
 
-- See `/docs/PRD.md` for product requirements and user flows
-- See `/docs/TECHNICAL_DESIGN.md` for architecture and database schema
-- See `/docs/IMPLEMENTATION_PLAN.md` for phased build tasks
+```bash
+pnpm install          # Install dependencies
+pnpm dev              # Start dev server (http://localhost:3000)
+pnpm build            # Production build (also serves as type-check)
+pnpm lint             # ESLint (next/core-web-vitals config)
+```
 
------
+No test framework is configured. There are no test scripts or test files. Use `pnpm build` to verify TypeScript correctness.
 
 ## Tech Stack
 
-|Layer          |Choice                                                     |
-|---------------|-----------------------------------------------------------|
-|Framework      |Next.js 14 (App Router)                                    |
-|Language       |TypeScript (strict mode)                                   |
-|Styling        |Tailwind CSS + shadcn/ui                                   |
-|Database       |Supabase (PostgreSQL)                                      |
-|Auth           |Supabase Auth (email/password + magic link)                |
-|Storage        |Supabase Storage (for audio files)                         |
-|Text-to-Speech |Web Speech API (browser-native, fallback to ElevenLabs API)|
-|Deployment     |Vercel                                                     |
-|Package Manager|pnpm                                                       |
+Next.js 14 (App Router) · TypeScript (strict) · Tailwind CSS + shadcn/ui · Supabase (PostgreSQL, Auth, Storage) · Web Speech API for TTS · pnpm · Deployed on Vercel
 
------
+## Architecture
 
-## Folder Structure
+### Routing & Auth Protection
 
-```
-/
-├── app/                        # Next.js App Router
-│   ├── (auth)/                 # Auth routes (login, signup)
-│   ├── (dashboard)/            # Protected routes
-│   │   ├── practice/           # Main practice session UI
-│   │   ├── progress/           # Progress tracking
-│   │   ├── words/              # Word list browser
-│   │   └── settings/           # Account settings
-│   ├── api/                    # API route handlers
-│   └── layout.tsx
-├── components/
-│   ├── ui/                     # shadcn/ui primitives
-│   ├── practice/               # Practice session components
-│   ├── words/                  # Word card, word list components
-│   ├── progress/               # Charts, stats components
-│   └── layout/                 # Nav, sidebar, header
-├── lib/
-│   ├── supabase/               # Supabase client + server helpers
-│   ├── hooks/                  # Custom React hooks
-│   ├── utils/                  # Shared utility functions
-│   └── types/                  # TypeScript type definitions
-├── data/
-│   └── words/                  # Static word list JSON files by category
-├── docs/                       # Project planning documents
-└── public/                     # Static assets
-```
+Two route groups under `app/`:
+- `(auth)/` — login, signup pages with a centered card layout
+- `(dashboard)/` — all protected pages (practice, progress, words, guidelines, settings, onboarding)
 
------
+**Auth gate**: The `(dashboard)/layout.tsx` server component calls `supabase.auth.getUser()` and redirects to `/login` if unauthenticated, or `/onboarding` if no child profile exists. This is the real auth protection — the middleware refreshes session tokens but does not enforce route protection (known issue: middleware checks for `/(dashboard)` prefix which never matches real URLs).
+
+Auth actions (login, signup, magic link, logout) are Server Actions in `app/(auth)/actions.ts`. Magic link callback is handled by `app/api/auth/callback/route.ts`.
+
+### Supabase Clients (3 variants in `lib/supabase/`)
+
+| File | Usage |
+|------|-------|
+| `client.ts` | Browser client — use only in `'use client'` components |
+| `server.ts` | Server client with cookie handling — use in Server Components and Server Actions |
+| `admin.ts` | Service-role client — use for privileged server-side operations only |
+
+### Practice Session Flow
+
+The core feature uses a `useReducer` state machine in `app/(dashboard)/practice/[sessionId]/page.tsx`:
+
+1. **Setup** (`/practice` page): User selects word count and pool type → inserts `practice_sessions` row → redirects to `/practice/{sessionId}?count=N&pool=TYPE`
+2. **Session** (`/practice/[sessionId]`): Words loaded from static JSON via `selectWords()`, presented one at a time through phases: `listening` → `typing` → `feedback` → next word or `complete`
+3. **Scoring**: `checkSpelling()` (in `lib/utils/check-spelling.ts`) does case-insensitive comparison, also accepts `alternate_spelling`
+4. **Persistence**: On each attempt, fire-and-forget async calls UPSERT `word_progress` and INSERT `session_attempts`. On completion, updates `practice_sessions` totals and `daily_streaks`.
+
+Word pool selection strategies (`lib/utils/word-selection.ts`): `all`, `needs_review`, `not_started`, `random_mix` (60% not_started + 30% needs_review + 10% learning)
+
+### Word Data
+
+Static JSON at `data/words/primary-2026.json` — imported at build time, no network request needed. Currently 50 of 400 planned words. Each word has: `id`, `word`, `pronunciation`, `part_of_speech`, `definition`, `example_sentence`, `homophones[]`, `requires_capital`, `capital_letter`, `spelling_rule_tags[]`, optional `alternate_spelling`.
+
+Spelling guidelines in `data/guidelines/spelling-rules.json` — 10 rules with subrules and examples.
+
+### Database Schema
+
+`data/schema.sql` defines 5 tables (all with RLS):
+- `profiles` — extends `auth.users`, auto-created by trigger `on_auth_user_created`
+- `child_profiles` — child name/age/category per parent (MVP uses only the first child)
+- `word_progress` — per-word mastery tracking per child (status: `not_started`/`learning`/`mastered`/`needs_review`)
+- `practice_sessions` — one row per session with totals
+- `session_attempts` — one row per word attempt within a session
+- `daily_streaks` — one row per child tracking current and longest streak
+
+RLS policies scope all data to `auth.uid()` matching the parent chain.
+
+### Data Layer Pattern
+
+There is no service/repository layer. All Supabase queries are inline in page components. The practice session page defines `saveAttempt` and `completeSession` as `useCallback` closures that re-query for user/child on each call.
 
 ## Coding Conventions
 
-### TypeScript
-
-- Always use strict TypeScript — no `any` types
-- Define all data shapes in `/lib/types/index.ts`
-- Use Zod for runtime validation on API routes
-
-### Components
-
-- Use named exports for all components
-- One component per file
-- Props interfaces defined at top of each file
-- All interactive components must be client components (`'use client'`)
-- Server components by default unless state/effects are needed
-
-### Naming
-
-- Components: `PascalCase` (e.g., `WordCard.tsx`)
-- Hooks: `camelCase` prefixed with `use` (e.g., `usePracticeSession.ts`)
-- Utilities: `camelCase` (e.g., `formatScore.ts`)
-- DB tables: `snake_case` (e.g., `practice_sessions`)
-- CSS classes: Tailwind only — no custom CSS files unless absolutely necessary
-
-### Supabase
-
-- Always use the server-side Supabase client for API routes and server components
-- Use the browser client only inside `'use client'` components
-- Row-level security (RLS) must be enabled on all tables
-- Never expose service role key client-side
-
-### Error Handling
-
-- All API routes must return typed error responses
-- Use `try/catch` on all async operations
-- Show user-friendly error messages — never expose raw error strings
-
------
+- **TypeScript**: Strict mode, no `any`. All types in `lib/types/index.ts`. Use Zod for API route validation.
+- **Components**: Named exports, one per file, props interfaces at top. Server components by default; add `'use client'` only when state/effects are needed.
+- **Naming**: Components `PascalCase`, hooks `useCamelCase`, utilities `camelCase`, DB tables `snake_case`.
+- **Styling**: Tailwind only, no custom CSS files. shadcn/ui for form elements, modals, toasts. SBOC brand colors are defined as `sboc-*` in `tailwind.config.ts`.
+- **Fonts**: `font-display` (Fredoka), `font-body` (DM Sans), `font-mono` (JetBrains Mono) — loaded via Google Fonts CDN in root layout.
+- **Path alias**: `@/*` maps to project root (e.g., `@/lib/utils/cn`, `@/components/ui/button`).
+- **Git**: Conventional Commits (`feat:`, `fix:`, `docs:`, `chore:`). Branch naming: `feature/`, `fix/`, `chore/`.
 
 ## Design System
 
-### Colors (SBOC Brand)
+| Token | Value | Usage |
+|-------|-------|-------|
+| `sboc-yellow` | `#F5C400` | Primary brand color |
+| `sboc-dark` | `#1A1A1A` | Text, dark backgrounds |
+| `sboc-white` | `#FAFAF5` | Off-white backgrounds |
+| `sboc-green` | `#22C55E` | Correct answers |
+| `sboc-red` | `#EF4444` | Incorrect answers |
+| `sboc-neutral` | `#6B7280` | Secondary text |
 
-```
-Primary Yellow:  #F5C400   (SBOC brand yellow)
-Dark:            #1A1A1A   (text, backgrounds)
-White:           #FAFAF5   (off-white backgrounds)
-Accent Green:    #22C55E   (correct answers)
-Accent Red:      #EF4444   (incorrect answers)
-Neutral:         #6B7280   (secondary text)
-```
-
-### Typography
-
-- Display/Headings: `Fredoka` (Google Fonts) — playful, child-friendly
-- Body: `DM Sans` (Google Fonts) — clean and readable
-- Monospace (letters): `JetBrains Mono` — for spelling letter display
-
-### Component Rules
-
-- All buttons must have visible focus states (accessibility)
-- Minimum tap target size: 44×44px (mobile-friendly for children)
-- Use `shadcn/ui` for all form elements, modals, and toasts
-- Animations: subtle, purposeful — use Tailwind `transition` classes
-
------
-
-## Age Category Reference
-
-|Category    |Age Range  |Word Count|
-|------------|-----------|----------|
-|Primary     |6–8 years  |400 words |
-|Junior      |9–11 years |TBD       |
-|Intermediate|12–14 years|TBD       |
-
-
-> MVP focuses on Primary category (400 words from 2026 Official Study Guide)
-
------
+Minimum tap target: 44×44px (child-friendly). All buttons need visible focus states.
 
 ## Key Business Rules
 
-1. A "practice session" presents words one at a time via audio (text-to-speech)
-1. The child types or speaks their spelling attempt
-1. Homophones must show definition + example sentence (per official rules)
-1. Words with capitals must be flagged so child knows to indicate "Capital X"
-1. Progress is tracked per word: correct / incorrect / skipped / needs review
-1. Parents can view their child's progress but cannot alter practice data
-1. All 400 Primary words are available offline via static JSON (no auth required to browse)
-
------
-
-## Environment Variables
-
-```bash
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
-SUPABASE_SERVICE_ROLE_KEY=       # Server-side only, never expose
-ELEVENLABS_API_KEY=              # Optional TTS fallback
-```
-
------
-
-## Git Conventions
-
-- Branch naming: `feature/`, `fix/`, `chore/`
-- Commit style: Conventional Commits (`feat:`, `fix:`, `docs:`, `chore:`)
-- Never commit `.env.local`
-- PR descriptions must reference the implementation plan phase
-
------
+1. Practice sessions present words via TTS one at a time; child types their spelling
+2. Homophones must show definition + example sentence (per SBOC official rules)
+3. Words with capitals must be flagged so child knows to indicate "Capital X"
+4. Progress tracked per word: correct_streak >= 2 → `mastered`, incorrect → `needs_review`
+5. Parents can view but not alter practice data
+6. Word list browsing works without auth (static JSON)
+7. MVP focuses on Primary category (ages 6–8, 400 words) only
 
 ## What NOT to Do
 
 - Do not use `pages/` router — App Router only
-- Do not use `any` in TypeScript
 - Do not use inline styles — Tailwind only
 - Do not store sensitive data in localStorage
-- Do not build the organizer/competition-management features in MVP
+- Do not build organizer/competition-management features in MVP
 - Do not build Junior or Intermediate word lists until Primary is complete
 
------
+## Environment Variables
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=        # Supabase project URL
+NEXT_PUBLIC_SUPABASE_ANON_KEY=   # Supabase anon key (public)
+SUPABASE_SERVICE_ROLE_KEY=       # Server-side only, never expose
+ELEVENLABS_API_KEY=              # Optional TTS fallback
+```
 
 ## Implementation Status
 
-> Last updated: March 2026
+Phases 1–7 (foundation through polish) are complete. Phase 8 (deployment) is pending — requires Supabase project setup, running `data/schema.sql`, completing the word list to 400 words, and Vercel deployment.
 
-| Phase | Feature | Status |
-|-------|---------|--------|
-| 1 | Foundation & Infrastructure | Done |
-| 2 | Authentication & Profiles | Done |
-| 3 | Practice Session (Core) | Done |
-| 4 | Word List Browser | Done |
-| 5 | Progress Dashboard & Review | Done |
-| 6 | Spelling Guidelines | Done |
-| 7 | Polish & Error Handling | Done |
-| 8 | Deployment & Launch | Pending (requires Supabase + Vercel setup) |
+## Known Issues
 
-### Before deploying:
-1. Set up a Supabase project and add credentials to `.env.local`
-2. Run `data/schema.sql` in the Supabase SQL Editor to create tables and RLS policies
-3. Complete the word list in `data/words/primary-2026.json` (50 sample words included, needs all 400)
-4. Connect the GitHub repo to Vercel and add environment variables
-5. Verify fonts load correctly on deployed URL (Google Fonts loaded via CDN link)
+- **Middleware auth check is a no-op**: `middleware.ts` checks `pathname.startsWith("/(dashboard)")` but route group parentheses are stripped from real URLs. Auth protection relies on the dashboard layout's server-side redirect instead.
+- **Word list incomplete**: `data/words/primary-2026.json` has 50 of 400 planned words.
+- **Zod not installed**: CLAUDE.md convention says to use Zod for API validation, but it is not in `package.json`. Install it before adding validated API routes.
