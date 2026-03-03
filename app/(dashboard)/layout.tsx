@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation"
+import { headers } from "next/headers"
 import { createClient } from "@/lib/supabase/server"
 import { Sidebar } from "@/components/layout/sidebar"
 
@@ -23,9 +24,15 @@ export default async function DashboardLayout({
     .select("*")
     .eq("parent_id", user.id)
 
-  // If no child profiles, redirect to onboarding
+  // If no child profiles, redirect to onboarding (unless already there)
   if (!childProfiles || childProfiles.length === 0) {
-    redirect("/onboarding")
+    const headersList = headers()
+    const pathname = headersList.get("x-pathname") ?? ""
+    if (!pathname.startsWith("/onboarding")) {
+      redirect("/onboarding")
+    }
+    // Render onboarding without sidebar
+    return <>{children}</>
   }
 
   // Use the first child profile for now (MVP: single child)
